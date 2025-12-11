@@ -1,63 +1,68 @@
-
 import java.util.*;
 import java.io.*;
-import static java.lang.Integer.parseInt;
+
 public class Main {
 	static int n, m;
 	static int[][] map;
-	static boolean[][][] isVisited;
+	static boolean[][][] visit;
+	static int answer;
 
 	public static void main(String[] args) throws Exception{
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		StringTokenizer st = new StringTokenizer(br.readLine());
-		n = parseInt(st.nextToken());
-		m = parseInt(st.nextToken());
-		map = new int[n+1][m+1];
-		isVisited = new boolean[n+1][m+1][2]; // 벽을 부수고 안부수고를 고려해서 방문처리를 해야해
-		for(int i=1;i<=n;i++) {
-			char[] temp = br.readLine().toCharArray();
-			for(int j=1;j<=m;j++) {
-				map[i][j] = temp[j-1]-'0';
-			}
-		}
-		int res = bfs(1,1);
-		System.out.println(res);
-
+		input();
+		answer = -1;
+		bfs();
+		System.out.print(answer);
 	}
-	
-	public static int bfs(int r, int c){
-		int[] dr = {-1, 1, 0, 0};
-		int[] dc = {0, 0, -1, 1};	
-		ArrayDeque<int[]> q = new ArrayDeque<>();
-		q.add(new int[] {r, c, 1, 0});
-		isVisited[r][c][0] = true;
+	static int[] dr = {-1, 1, 0, 0 };
+	static int[] dc = {0, 0, -1, 1};
+
+	private static void bfs() {
+		visit = new boolean[n][m][2];
+		visit[0][0][0] = true;
+		Queue<int[]> q = new ArrayDeque<>();
+		q.add(new int[] {0,0,1,0});
 		while(!q.isEmpty()) {
 			int[] temp = q.poll();
-			int cnt = temp[2]; // 이동한 거리
-			int state = temp[3]; //벽을 부섰는지 안부셨는지 (이전 기수에)
-			if(temp[0]==n && temp[1]==m) {
-				return cnt;
+			int curR = temp[0];
+			int curC = temp[1];
+			int curDist = temp[2];
+			int breakWall = temp[3];
+			if(curR==n-1 && curC==m-1) {
+				answer = curDist;
+				return;
 			}
 			for(int i=0;i<4;i++) {
-				int nr = temp[0]+dr[i];
-				int nc = temp[1]+dc[i];
-				if(nr>=1 && nc>=1 && nr<=n && nc<=m && !isVisited[nr][nc][state]) { // 범위 안에 들어오고 방문하지 않았다면
-					if(map[nr][nc]==0) {
-						isVisited[nr][nc][state] = true;
-						q.add(new int[] {nr, nc, cnt+1, state}); // 전기수 반영 state
-					}else if(map[nr][nc]==1 && state==0) { // 방문하려는 곳이 1인데 아직 벽을 부수지 않았음
-						isVisited[nr][nc][state] = true;
-						q.add(new int[] {nr, nc, cnt+1, 1});
-					}else if(map[nr][nc]==1 && state==1){// 방문하려는 곳이 1인데 이미 벽을 부쉈으면 할 도리가 없음
-						continue; // 다음거 진행
-					} 
-					
+				int nr = curR + dr[i];
+				int nc = curC + dc[i];
+				if(isin(nr, nc)) {
+					if(map[nr][nc]==0 && !visit[nr][nc][breakWall]) {
+						q.add(new int[] {nr, nc, curDist+1, breakWall});
+						visit[nr][nc][breakWall] = true;
+					}else if(map[nr][nc]==1 && breakWall==0 && !visit[nr][nc][breakWall]) {
+						q.add(new int[] {nr, nc, curDist+1, 1});
+						visit[nr][nc][1] = true;
+					}
 				}
 			}
 		}
-		
-		// 그냥 q에 든게 없다면 
-		return -1;
+	}
+
+	private static boolean isin(int nr, int nc) {
+		return nr>=0 && nr <n && nc>=0 && nc<m;
+	}
+
+	private static void input() throws Exception{
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		StringTokenizer st = new StringTokenizer(br.readLine());
+		n = Integer.parseInt(st.nextToken());
+		m = Integer.parseInt(st.nextToken());
+		map = new int[n][m];
+		for(int i=0;i<n;i++) {
+			String temp = br.readLine();
+			for(int j=0;j<m;j++) {
+				map[i][j] = temp.charAt(j)-'0';; 
+			}
+		}
 		
 	}
 
